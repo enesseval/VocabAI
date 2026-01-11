@@ -11,6 +11,7 @@ import InterestsScreen from './src/screens/InterestsScreen';
 import IdentityScreen from '@/screens/IdentityScreen';
 import LanguageScreen from '@/screens/LanguageScreen';
 import PurposeScreen from '@/screens/PurposeScreen';
+import { OnboardingProvider } from '@/context/OnboardingContext';
 
 export type RootStackParamList = {
   Welcome: undefined;
@@ -44,18 +45,20 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Welcome">
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="Identity" component={IdentityScreen} />
-            <Stack.Screen name="Language" component={LanguageScreen} />
-            <Stack.Screen name="Purpose" component={PurposeScreen} />
-            <Stack.Screen name="Interests" component={InterestsScreen} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </View>
-    </SafeAreaProvider>
+    <OnboardingProvider>
+      <SafeAreaProvider>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Welcome">
+              <Stack.Screen name="Welcome" component={WelcomeScreen} />
+              <Stack.Screen name="Identity" component={IdentityScreen} />
+              <Stack.Screen name="Language" component={LanguageScreen} />
+              <Stack.Screen name="Purpose" component={PurposeScreen} />
+              <Stack.Screen name="Interests" component={InterestsScreen} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </View>
+      </SafeAreaProvider>
+    </OnboardingProvider>
   );
 }

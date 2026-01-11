@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import OnboardingHeader from '../components/OnboardingHeader';
 import OnboardingFooter from '../components/OnboardingFooter';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 const COLORS = {
     bg: '#050406',
@@ -18,10 +19,13 @@ const COLORS = {
 
 export default function IdentityScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const [name, setName] = useState('');
-    const [age, setAge] = useState('');
 
-    const isFormValid = name.trim() !== '' && age.trim() !== '';
+    const { userProfile, updateProfile } = useOnboarding();
+
+    const handleNameChange = (text: string) => updateProfile({ name: text });
+    const handleAgeChange = (text: string) => updateProfile({ age: text });
+
+    const isFormValid = userProfile.name.trim() !== '' && userProfile.age.trim()
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -54,8 +58,8 @@ export default function IdentityScreen() {
                                         style={styles.input}
                                         placeholder="İsminizi girin"
                                         placeholderTextColor="rgba(255,255,255,0.3)"
-                                        value={name}
-                                        onChangeText={setName}
+                                        value={userProfile.name}
+                                        onChangeText={handleNameChange}
                                         keyboardAppearance="dark"
                                     />
                                 </View>
@@ -66,8 +70,8 @@ export default function IdentityScreen() {
                                         style={styles.input}
                                         placeholder="00"
                                         placeholderTextColor="rgba(255,255,255,0.3)"
-                                        value={age}
-                                        onChangeText={setAge}
+                                        value={userProfile.age}
+                                        onChangeText={handleAgeChange}
                                         keyboardType="number-pad"
                                         maxLength={2}
                                         keyboardAppearance="dark"
