@@ -10,11 +10,13 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 import InterestsScreen from './src/screens/InterestsScreen';
 import IdentityScreen from '@/screens/IdentityScreen';
 import LanguageScreen from '@/screens/LanguageScreen';
+import PurposeScreen from '@/screens/PurposeScreen';
 
 export type RootStackParamList = {
   Welcome: undefined;
   Identity: undefined;
   Language: undefined;
+  Purpose: undefined;
   Interests: undefined;
 };
 
@@ -49,6 +51,7 @@ export default function App() {
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Identity" component={IdentityScreen} />
             <Stack.Screen name="Language" component={LanguageScreen} />
+            <Stack.Screen name="Purpose" component={PurposeScreen} />
             <Stack.Screen name="Interests" component={InterestsScreen} />
           </Stack.Navigator>
         </NavigationContainer>

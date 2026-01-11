@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from 'App';
+import { RootStackParamList } from '../../App';
 import OnboardingHeader from '../components/OnboardingHeader';
+import OnboardingFooter from '../components/OnboardingFooter';
 
 const COLORS = {
     bg: '#050406',
-    primary: '#7c3aed',
+    primary: '#fbbf24', // Gold
     inputLabel: '#9ca3af',
     inputBorder: 'rgba(255,255,255,0.2)',
 };
@@ -22,6 +21,8 @@ export default function IdentityScreen() {
     const [name, setName] = useState('');
     const [age, setAge] = useState('');
 
+    const isFormValid = name.trim() !== '' && age.trim() !== '';
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
@@ -29,26 +30,26 @@ export default function IdentityScreen() {
                 <LinearGradient colors={['#1e1b4b', '#050406', '#000']} locations={[0, 0.3, 1]} style={StyleSheet.absoluteFill} />
 
                 <SafeAreaView style={styles.safeArea}>
+                    <OnboardingHeader currentStep={1} />
+
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={styles.keyboardAvoidingView}
                     >
-                        <OnboardingHeader currentStep={1} />
-
                         <ScrollView
                             style={styles.contentContainer}
                             contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={false}
                         >
                             <View style={styles.titleContainer}>
-                                <Text style={styles.mainTitle}>Kim</Text>
-                                <Text style={styles.highlightTitle}>öğreniyor?</Text>
-                                <Text style={styles.subtitle}>Kimliğin, öğrenme yolculuğunu şekillendirir.</Text>
+                                <Text style={styles.mainTitle}>Seni</Text>
+                                <Text style={styles.highlightTitle}>Tanıyalım</Text>
+                                <Text style={styles.subtitle}>En iyi deneyimi sunabilmemiz için kim olduğunu bilmeliyiz.</Text>
                             </View>
 
                             <View style={styles.formContainer}>
                                 <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>İSİM</Text>
+                                    <Text style={styles.label}>İSMİN</Text>
                                     <TextInput
                                         style={styles.input}
                                         placeholder="İsminizi girin"
@@ -58,8 +59,9 @@ export default function IdentityScreen() {
                                         keyboardAppearance="dark"
                                     />
                                 </View>
+
                                 <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>YAŞ</Text>
+                                    <Text style={styles.label}>YAŞIN</Text>
                                     <TextInput
                                         style={styles.input}
                                         placeholder="00"
@@ -74,23 +76,10 @@ export default function IdentityScreen() {
                             </View>
                         </ScrollView>
 
-                        {/* FOOTER BUTTON - KeyboardAvoidingView İçinde */}
-                        <View style={styles.footer}>
-                            <TouchableOpacity
-                                style={[styles.continueButton, (name.trim() === '' || age.trim() === '') && styles.disabledButton]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                    navigation.navigate('Language');
-                                }}
-                                disabled={name.trim() === '' || age.trim() === ''}
-                            >
-                                <Text style={styles.continueText}>DEVAM ET</Text>
-                                <View style={styles.iconCircle}>
-                                    <Ionicons name="arrow-forward" size={20} color="#fff" />
-                                </View>
-                            </TouchableOpacity>
-                        </View>
+                        <OnboardingFooter
+                            onPress={() => navigation.navigate('Language')}
+                            disabled={!isFormValid}
+                        />
                     </KeyboardAvoidingView>
                 </SafeAreaView>
             </View>
@@ -100,22 +89,18 @@ export default function IdentityScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
-    safeArea: { flex: 1 },
-    keyboardAvoidingView: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
-    // Removed header and progress bar styles as they are now in the component
+    safeArea: { flex: 1, paddingHorizontal: 24 },
+    keyboardAvoidingView: { flex: 1 },
     contentContainer: { flex: 1 },
     scrollContent: { paddingBottom: 100 },
+
     titleContainer: { marginTop: 20, marginBottom: 40 },
     mainTitle: { fontSize: 42, color: '#fff', fontFamily: 'PlayfairDisplay-Regular' },
     highlightTitle: { fontSize: 42, color: COLORS.primary, fontFamily: 'PlayfairDisplay-Italic', fontWeight: 'bold', marginBottom: 12 },
-    subtitle: { color: 'rgba(255,255,255,0.5)', fontSize: 16 },
+    subtitle: { color: 'rgba(255,255,255,0.5)', fontSize: 16, fontFamily: 'Inter-Regular' },
+
     formContainer: { gap: 30 },
     inputGroup: { gap: 10 },
-    label: { color: COLORS.inputLabel, fontSize: 12, letterSpacing: 1.5, fontWeight: '600' },
+    label: { color: COLORS.inputLabel, fontSize: 12, letterSpacing: 1.5, fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Inter-SemiBold' },
     input: { color: '#fff', fontSize: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.inputBorder, fontFamily: 'Inter-Regular' },
-    footer: { paddingBottom: 20 },
-    continueButton: { height: 72, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 36, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 30 },
-    continueText: { color: '#fff', fontSize: 16, letterSpacing: 2, fontWeight: 'bold' },
-    iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
-    disabledButton: { opacity: 0.5, borderColor: 'rgba(255,255,255,0.3)' },
 });

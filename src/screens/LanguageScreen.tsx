@@ -10,10 +10,11 @@ import { Picker } from '@react-native-picker/picker';
 import * as Haptics from 'expo-haptics';
 import { RootStackParamList } from '../../App';
 import OnboardingHeader from '../components/OnboardingHeader';
+import OnboardingFooter from '../components/OnboardingFooter';
 
 const COLORS = {
     bg: '#050406',
-    primary: '#7c3aed',
+    primary: '#fbbf24', // Gold
     inputLabel: '#9ca3af',
     inputBorder: 'rgba(255,255,255,0.2)',
     cardBg: '#1e1b2e',
@@ -40,8 +41,6 @@ export default function LanguageScreen() {
     const handleNativeChange = (val: string | null) => {
         setNativeLang(val);
         if (val) Haptics.selectionAsync();
-        // Hedef dil ile çakışma kontrolü artık filtreleme ile önleniyor ama
-        // yine de state tutarlılığı için kontrol edebiliriz
         if (val && val === targetLang) {
             setTargetLang(null);
         }
@@ -58,7 +57,6 @@ export default function LanguageScreen() {
     const openIOSPicker = (field: 'native' | 'target') => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setActiveField(field);
-        // Varsayılan değer olarak mevcut seçimi veya listenin ilk uygun elemanını ata
         const currentVal = field === 'native' ? nativeLang : targetLang;
         setTempPickerValue(currentVal);
         setPickerVisible(true);
@@ -101,7 +99,6 @@ export default function LanguageScreen() {
             <LinearGradient colors={['#1e1b4b', '#050406', '#000']} locations={[0, 0.3, 1]} style={StyleSheet.absoluteFill} />
 
             <SafeAreaView style={styles.safeArea}>
-                {/* HEADER */}
                 <OnboardingHeader currentStep={2} />
 
                 <View style={styles.contentContainer}>
@@ -125,7 +122,6 @@ export default function LanguageScreen() {
                                 </Text>
                                 <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.5)" />
 
-                                {/* Android Invisible Picker */}
                                 {Platform.OS === 'android' && (
                                     <Picker
                                         selectedValue={nativeLang}
@@ -153,7 +149,6 @@ export default function LanguageScreen() {
                                 </Text>
                                 <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.5)" />
 
-                                {/* Android Invisible Picker */}
                                 {Platform.OS === 'android' && (
                                     <Picker
                                         selectedValue={targetLang}
@@ -162,7 +157,6 @@ export default function LanguageScreen() {
                                         dropdownIconColor="#fff"
                                         mode="dialog"
                                     >
-                                        {/* Hedef dilde, ana dil olarak seçileni gösterme */}
                                         {renderPickerItems(nativeLang)}
                                     </Picker>
                                 )}
@@ -171,25 +165,11 @@ export default function LanguageScreen() {
                     </View>
                 </View>
 
-                {/* FOOTER BUTTON */}
-                <View style={styles.footer}>
-                    <TouchableOpacity
-                        style={[styles.continueButton, !isFormValid && styles.disabledButton]}
-                        activeOpacity={0.8}
-                        disabled={!isFormValid}
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                            navigation.navigate('Interests');
-                        }}
-                    >
-                        <Text style={[styles.continueText, !isFormValid && { color: 'rgba(255,255,255,0.3)' }]}>
-                            DEVAM ET
-                        </Text>
-                        <View style={[styles.iconCircle, !isFormValid && { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-                            <Ionicons name="arrow-forward" size={20} color={isFormValid ? "#fff" : "rgba(255,255,255,0.3)"} />
-                        </View>
-                    </TouchableOpacity>
-                </View>
+                {/* REUSABLE FOOTER */}
+                <OnboardingFooter
+                    onPress={() => navigation.navigate('Purpose')}
+                    disabled={!isFormValid}
+                />
 
                 {/* iOS CUSTOM PICKER MODAL */}
                 <Modal
@@ -217,7 +197,6 @@ export default function LanguageScreen() {
                                 style={{ height: 215, width: '100%' }}
                                 itemStyle={{ color: '#fff' }}
                             >
-                                {/* Modal içinde de filtreli listeyi kullan */}
                                 {renderPickerItems(activeField === 'native' ? targetLang : nativeLang)}
                             </Picker>
                         </View>
@@ -262,12 +241,6 @@ const styles = StyleSheet.create({
         right: 0,
         opacity: 0,
     },
-
-    footer: { paddingBottom: 20 },
-    continueButton: { height: 72, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 36, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 30 },
-    disabledButton: { opacity: 0.5, borderColor: 'rgba(255,255,255,0.05)' },
-    continueText: { color: '#fff', fontSize: 16, letterSpacing: 2, fontWeight: 'bold' },
-    iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
 
     iosModalOverlay: { flex: 1, justifyContent: 'flex-end' },
     iosModalContent: { backgroundColor: '#1e1b2e', paddingBottom: 40, borderTopLeftRadius: 20, borderTopRightRadius: 20 },

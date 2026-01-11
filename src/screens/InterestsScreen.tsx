@@ -9,20 +9,16 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import OnboardingHeader from '../components/OnboardingHeader';
-
-const { width } = Dimensions.get('window');
+import OnboardingFooter from '../components/OnboardingFooter';
 
 const COLORS = {
     bg: '#050406',
-    primary: '#7c3aed',
-    text: '#ffffff',
+    primary: '#fbbf24', // Gold
     cardBg: 'rgba(255,255,255,0.05)',
-    cardBorder: 'rgba(255,255,255,0.1)',
-    activeBorder: '#fbbf24', // Seçilince Altın Sarısı
-    activeGlow: 'rgba(251, 191, 36, 0.3)',
+    activeBorder: '#fbbf24',
+    activeGlow: 'rgba(251, 191, 36, 0.15)',
 };
 
-// --- KATEGORİ DATASI ---
 type Topic = {
     id: number;
     name: string;
@@ -30,49 +26,50 @@ type Topic = {
 };
 
 const TOPICS: Topic[] = [
-    { id: 1, name: 'Yazılım & Teknoloji', icon: 'code-slash-outline' },
-    { id: 2, name: 'İş Dünyası & Girişim', icon: 'briefcase-outline' },
-    { id: 3, name: 'Seyahat & Kültür', icon: 'airplane-outline' },
-    { id: 4, name: 'Günlük Konuşma', icon: 'chatbubbles-outline' },
-    { id: 5, name: 'Bilim & Uzay', icon: 'planet-outline' },
-    { id: 6, name: 'Sanat & Edebiyat', icon: 'color-palette-outline' },
-    { id: 7, name: 'Oyun (Gaming)', icon: 'game-controller-outline' },
-    { id: 8, name: 'Sağlık & Spor', icon: 'fitness-outline' },
+    { id: 1, name: 'Teknoloji', icon: 'hardware-chip-outline' },
+    { id: 2, name: 'Felsefe', icon: 'library-outline' },
+    { id: 3, name: 'Sanat', icon: 'color-palette-outline' },
+    { id: 4, name: 'İş Dünyası', icon: 'briefcase-outline' },
+    { id: 5, name: 'Doğa', icon: 'leaf-outline' },
+    { id: 6, name: 'Bilim', icon: 'flask-outline' },
+    { id: 7, name: 'Edebiyat', icon: 'book-outline' },
+    { id: 8, name: 'Tarih', icon: 'hourglass-outline' },
+    { id: 9, name: 'Sinema', icon: 'film-outline' },
+    { id: 10, name: 'Seyahat', icon: 'airplane-outline' },
 ];
 
-const TopicCard = ({ item, isSelected, onPress }: { item: Topic, isSelected: boolean, onPress: () => void }) => {
+const TopicPill = ({ item, isSelected, onPress }: { item: Topic, isSelected: boolean, onPress: () => void }) => {
     return (
         <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPress}
-            style={[styles.cardContainer, isSelected && styles.cardSelected]}
+            style={[
+                styles.pill,
+                isSelected && styles.pillSelected
+            ]}
         >
-            <LinearGradient
-                colors={isSelected ? ['rgba(124, 58, 237, 0.4)', 'rgba(251, 191, 36, 0.1)'] : [COLORS.cardBg, COLORS.cardBg]}
-                style={styles.cardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                <View style={[styles.iconBox, isSelected && { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                    <Ionicons name={item.icon} size={24} color={isSelected ? '#fbbf24' : 'rgba(255,255,255,0.6)'} />
-                </View>
-                <Text style={[styles.cardTitle, isSelected && { color: '#fff', fontWeight: 'bold' }]}>
+            <View style={styles.pillContent}>
+                <Ionicons
+                    name={item.icon}
+                    size={18}
+                    color={isSelected ? COLORS.primary : 'rgba(255,255,255,0.6)'}
+                    style={{ marginRight: 8 }}
+                />
+                <Text style={[
+                    styles.pillText,
+                    isSelected && { color: COLORS.primary, fontWeight: 'bold' }
+                ]}>
                     {item.name}
                 </Text>
-                {isSelected && (
-                    <View style={styles.checkIcon}>
-                        <Ionicons name="checkmark-circle" size={20} color="#fbbf24" />
-                    </View>
-                )}
-            </LinearGradient>
-            {isSelected && <View style={styles.glowBorder} />}
+            </View>
+
+            {isSelected && <View style={styles.pillGlow} />}
         </TouchableOpacity>
     );
 };
 
 export default function InterestsScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    // Çoklu seçim için state (Array tutuyoruz)
     const [selectedTopics, setSelectedTopics] = useState<number[]>([]);
 
     const toggleTopic = (id: number) => {
@@ -90,22 +87,24 @@ export default function InterestsScreen() {
             <LinearGradient colors={['#1e1b4b', '#050406', '#000']} locations={[0, 0.3, 1]} style={StyleSheet.absoluteFill} />
 
             <SafeAreaView style={styles.safeArea}>
+                <OnboardingHeader currentStep={4} />
 
-                {/* --- HEADER (BİLEŞEN KULLANIMI) --- */}
-                <OnboardingHeader currentStep={3} />
-
-                {/* --- BAŞLIK (TASARIM GÜNCELLENDİ) --- */}
                 <View style={styles.titleContainer}>
-                    <Text style={styles.mainTitle}>Nelerden</Text>
-                    <Text style={styles.highlightTitle}>hoşlanırsın?</Text>
-                    <Text style={styles.subtitle}>Sana özel setler hazırlamak için en az 1 tane seçmelisin.</Text>
+                    <Text style={styles.mainTitle}>Senin</Text>
+                    <Text style={styles.highlightTitle}>Dünyan</Text>
+                    <Text style={styles.subtitle}>
+                        Entelektüel manzaranı oluştur. Seni yansıtan alanları seç.
+                    </Text>
                 </View>
 
-                {/* --- GRID LİSTE (AYNEN KORUNDU) --- */}
-                <ScrollView contentContainerStyle={styles.gridContainer} showsVerticalScrollIndicator={false}>
-                    <View style={styles.grid}>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.pillContainer}>
                         {TOPICS.map((item) => (
-                            <TopicCard
+                            <TopicPill
                                 key={item.id}
                                 item={item}
                                 isSelected={selectedTopics.includes(item.id)}
@@ -113,51 +112,17 @@ export default function InterestsScreen() {
                             />
                         ))}
                     </View>
-                    {/* Footer butonun arkasında kalmaması için boşluk */}
-                    <View style={{ height: 100 }} />
                 </ScrollView>
 
-                {/* --- FOOTER BUTON (TASARIM GÜNCELLENDİ - OUTLINE STİL) --- */}
-                <View style={styles.footer}>
-                    {/* Gradient Fade Background */}
-                    <LinearGradient
-                        colors={['transparent', COLORS.bg, COLORS.bg]}
-                        locations={[0, 0.3, 1]}
-                        style={styles.footerGradient}
-                        pointerEvents="none"
-                    />
-
-                    <TouchableOpacity
-                        style={[
-                            styles.continueButton,
-                            selectedTopics.length === 0 && styles.disabledButton
-                        ]}
-                        disabled={selectedTopics.length === 0}
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            console.log("Seçilenler:", selectedTopics);
-                        }}
-                    >
-                        <Text style={[
-                            styles.continueText,
-                            selectedTopics.length === 0 && { color: 'rgba(255,255,255,0.3)' }
-                        ]}>
-                            DEVAM ET
-                        </Text>
-
-                        <View style={[
-                            styles.iconCircle,
-                            selectedTopics.length === 0 && { backgroundColor: 'rgba(255,255,255,0.05)' }
-                        ]}>
-                            <Ionicons
-                                name="arrow-forward"
-                                size={20}
-                                color={selectedTopics.length === 0 ? "rgba(255,255,255,0.3)" : "#fff"}
-                            />
-                        </View>
-                    </TouchableOpacity>
-                </View>
-
+                <OnboardingFooter
+                    text="PERSONA OLUŞTUR"
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                        console.log("Persona Oluşturuluyor:", selectedTopics);
+                        // Future: Navigate to next screen
+                    }}
+                    disabled={selectedTopics.length === 0}
+                />
             </SafeAreaView>
         </View>
     );
@@ -167,50 +132,51 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
     safeArea: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
 
-    // --- YENİ BAŞLIK STİLLERİ ---
-    titleContainer: { marginBottom: 30 },
-    mainTitle: { fontSize: 42, color: '#fff', fontFamily: 'PlayfairDisplay-Regular' },
-    highlightTitle: { fontSize: 42, color: COLORS.primary, fontFamily: 'PlayfairDisplay-Italic', fontWeight: 'bold', marginBottom: 12 },
-    subtitle: { color: 'rgba(255,255,255,0.5)', fontSize: 16, fontFamily: 'Inter-Regular' },
+    titleContainer: { marginTop: 10, marginBottom: 30, alignItems: 'center' },
+    mainTitle: { fontSize: 42, color: '#fff', fontFamily: 'PlayfairDisplay-Regular', textAlign: 'center' },
+    highlightTitle: { fontSize: 42, color: '#fbbf24', fontFamily: 'PlayfairDisplay-Italic', fontWeight: 'bold', marginBottom: 12, textAlign: 'center' },
+    subtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16, textAlign: 'center', lineHeight: 24, paddingHorizontal: 20 },
 
-    // --- GRID (ORİJİNAL KODDAN KORUNDU) ---
-    gridContainer: { paddingHorizontal: 0 },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-    cardContainer: { width: (width - 55) / 2, height: 140, marginBottom: 15, borderRadius: 20, borderWidth: 1, borderColor: COLORS.cardBorder, overflow: 'hidden', position: 'relative' },
-    cardSelected: { borderColor: COLORS.activeBorder },
-    cardGradient: { flex: 1, padding: 16, justifyContent: 'space-between' },
-    iconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-    cardTitle: { color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: '500' },
-    checkIcon: { position: 'absolute', top: 12, right: 12 },
-    glowBorder: { ...StyleSheet.absoluteFillObject, borderWidth: 1, borderColor: COLORS.activeBorder, borderRadius: 20, opacity: 0.5, shadowColor: COLORS.activeBorder, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 10 },
+    scrollContent: { paddingBottom: 150, alignItems: 'center' },
 
-    // --- YENİ FOOTER BUTON STİLLERİ ---
-    footer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        paddingHorizontal: 24,
-        paddingBottom: 30,
-        paddingTop: 40, // Gradient için üstten boşluk
+    pillContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 12,
+        width: '100%',
     },
-    footerGradient: {
-        ...StyleSheet.absoluteFillObject,
-        top: 0,
-    },
-    continueButton: {
-        height: 72,
-        backgroundColor: '#000',
-        borderRadius: 36,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
+
+    pill: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 30
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 999,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        position: 'relative',
+        overflow: 'hidden',
     },
-    disabledButton: { opacity: 0.5, borderColor: 'rgba(255,255,255,0.3)' },
-    continueText: { color: '#fff', fontSize: 16, letterSpacing: 2, fontWeight: 'bold' },
-    iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+    pillSelected: {
+        borderColor: COLORS.activeBorder,
+        backgroundColor: COLORS.activeGlow,
+    },
+    pillContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 2,
+    },
+    pillText: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 15,
+        fontWeight: '500',
+        letterSpacing: 0.5,
+    },
+    pillGlow: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: COLORS.activeBorder,
+        opacity: 0.05,
+    },
 });

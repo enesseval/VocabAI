@@ -10,10 +10,10 @@ type Props = {
 };
 
 const COLORS = {
-    primary: '#7c3aed',
+    primary: '#fbbf24',
 };
 
-export default function OnboardingHeader({ currentStep, totalSteps = 3, onBack }: Props) {
+export default function OnboardingHeader({ currentStep, totalSteps = 4, onBack }: Props) {
     const navigation = useNavigation();
 
     const handleBack = () => {
