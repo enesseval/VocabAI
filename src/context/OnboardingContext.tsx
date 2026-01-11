@@ -1,8 +1,6 @@
-// src/context/OnboardingContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
-// Veri Tipi
-interface UserProfile {
+export interface UserProfile {
     name: string;
     age: string;
     nativeLang: string | null;
@@ -46,7 +44,6 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-// Hook
 export const useOnboarding = () => {
     const context = useContext(OnboardingContext);
     if (!context) throw new Error('useOnboarding must be used within an OnboardingProvider');

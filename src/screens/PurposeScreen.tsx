@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -7,35 +7,29 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
+import { useTranslation } from 'react-i18next';
+
+import { RootStackParamList } from '../types/navigation';
 import OnboardingHeader from '../components/OnboardingHeader';
 import OnboardingFooter from '../components/OnboardingFooter';
-
-const { width } = Dimensions.get('window');
-
-const COLORS = {
-    bg: '#050406',
-    primary: '#fbbf24', // Gold
-    cardBg: 'rgba(255,255,255,0.05)',
-    activeBorder: '#fbbf24',
-    activeGlow: 'rgba(251, 191, 36, 0.15)',
-};
-
-// --- MOTİVASYON SEÇENEKLERİ (TÜRKÇE) ---
-const PURPOSES = [
-    { id: 'career', title: 'Kariyer', subtitle: 'Profesyonel ilerleme', icon: 'briefcase' },
-    { id: 'culture', title: 'Kültür', subtitle: 'Yerel halkla bağ kur', icon: 'earth' },
-    { id: 'brain', title: 'Beyin Egzersizi', subtitle: 'Zihnini dinç tut', icon: 'fitness' },
-    { id: 'exam', title: 'Sınav Hazırlığı', subtitle: 'Sınavlarda başarı', icon: 'school' },
-];
+import { useOnboarding } from '../context/OnboardingContext';
+import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function PurposeScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const [selectedPurpose, setSelectedPurpose] = useState<string | null>(null);
+    const { t } = useTranslation();
+    const { userProfile, updateProfile } = useOnboarding();
+
+    const PURPOSES = [
+        { id: 'career', title: t('onboarding.purpose.options.career'), subtitle: t('onboarding.purpose.options.careerSub'), icon: 'briefcase' },
+        { id: 'culture', title: t('onboarding.purpose.options.culture'), subtitle: t('onboarding.purpose.options.cultureSub'), icon: 'earth' },
+        { id: 'brain', title: t('onboarding.purpose.options.brain'), subtitle: t('onboarding.purpose.options.brainSub'), icon: 'fitness' },
+        { id: 'exam', title: t('onboarding.purpose.options.exam'), subtitle: t('onboarding.purpose.options.examSub'), icon: 'school' },
+    ];
 
     const handleSelect = (id: string) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setSelectedPurpose(id);
+        updateProfile({ purpose: id });
     };
 
     return (
@@ -44,49 +38,29 @@ export default function PurposeScreen() {
             <LinearGradient colors={['#1e1b4b', '#050406', '#000']} locations={[0, 0.3, 1]} style={StyleSheet.absoluteFill} />
 
             <SafeAreaView style={styles.safeArea}>
-                {/* 3. Adım */}
-                <OnboardingHeader currentStep={3} />
+                <OnboardingHeader
+                    currentStep={3}
+                    title={t('onboarding.purpose.title')}
+                    highlight={t('onboarding.purpose.highlight')}
+                    subtitle={t('onboarding.purpose.subtitle')}
+                />
 
-                {/* BAŞLIKLAR */}
-                <View style={styles.titleContainer}>
-                    <Text style={styles.mainTitle}>Amacın</Text>
-                    <Text style={styles.highlightTitle}>Nedir?</Text>
-                    <Text style={styles.subtitle}>Seni öğrenmeye iten asıl motivasyon ne?</Text>
-                </View>
-
-                {/* KARTLAR GRID */}
                 <View style={styles.gridContainer}>
                     <View style={styles.grid}>
                         {PURPOSES.map((item) => {
-                            const isSelected = selectedPurpose === item.id;
+                            const isSelected = userProfile.purpose === item.id;
                             return (
                                 <TouchableOpacity
                                     key={item.id}
                                     activeOpacity={0.9}
                                     onPress={() => handleSelect(item.id)}
-                                    style={[
-                                        styles.card,
-                                        isSelected && styles.cardSelected
-                                    ]}
+                                    style={[styles.card, isSelected && styles.cardSelected]}
                                 >
-                                    <View style={[
-                                        styles.iconCircle,
-                                        isSelected && { backgroundColor: 'rgba(255,255,255,0.2)' }
-                                    ]}>
-                                        <Ionicons
-                                            name={item.icon as any}
-                                            size={28}
-                                            color={isSelected ? COLORS.primary : '#fff'}
-                                        />
+                                    <View style={[styles.iconCircle, isSelected && { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                                        <Ionicons name={item.icon as any} size={28} color={isSelected ? COLORS.primary : '#fff'} />
                                     </View>
-
                                     <View>
-                                        <Text style={[
-                                            styles.cardTitle,
-                                            isSelected && { color: COLORS.primary }
-                                        ]}>
-                                            {item.title}
-                                        </Text>
+                                        <Text style={[styles.cardTitle, isSelected && { color: COLORS.primary }]}>{item.title}</Text>
                                         <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
                                     </View>
                                 </TouchableOpacity>
@@ -95,10 +69,10 @@ export default function PurposeScreen() {
                     </View>
                 </View>
 
-                {/* REUSABLE FOOTER */}
                 <OnboardingFooter
+                    text={t('onboarding.common.continue')}
                     onPress={() => navigation.navigate('Interests')}
-                    disabled={!selectedPurpose}
+                    disabled={!userProfile.purpose}
                 />
             </SafeAreaView>
         </View>
@@ -107,18 +81,11 @@ export default function PurposeScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
-    safeArea: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
-
-    titleContainer: { marginTop: 10, marginBottom: 30 },
-    mainTitle: { fontSize: 42, color: '#fff', fontFamily: 'PlayfairDisplay-Regular' },
-    highlightTitle: { fontSize: 42, color: COLORS.primary, fontFamily: 'PlayfairDisplay-Italic', fontWeight: 'bold', marginBottom: 12 },
-    subtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16 },
-
-    gridContainer: { flex: 1 },
+    safeArea: { flex: 1, paddingHorizontal: SIZES.padding },
+    gridContainer: { flex: 1, marginTop: 20 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 15 },
-
     card: {
-        width: (width - 63) / 2,
+        width: (SIZES.width - 63) / 2,
         aspectRatio: 0.85,
         borderRadius: 24,
         backgroundColor: COLORS.cardBg,
@@ -129,15 +96,9 @@ const styles = StyleSheet.create({
     },
     cardSelected: {
         backgroundColor: COLORS.activeGlow,
-        borderColor: COLORS.activeBorder
+        borderColor: COLORS.primary
     },
-
-    iconCircle: {
-        width: 52, height: 52, borderRadius: 26,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center', alignItems: 'center',
-        marginBottom: 10
-    },
-    cardTitle: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 6 },
-    cardSubtitle: { color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 18 },
+    iconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+    cardTitle: { color: COLORS.text, fontSize: 18, fontFamily: FONTS.bold, marginBottom: 6 },
+    cardSubtitle: { color: COLORS.textSecondary, fontSize: 13, fontFamily: FONTS.regular, lineHeight: 18 },
 });

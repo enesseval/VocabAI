@@ -1,42 +1,32 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Dimensions, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
+import { useTranslation } from 'react-i18next'; // Dil desteği
 
-const { width, height } = Dimensions.get('window');
-
-const COLORS = {
-    bg: '#050406',
-    primary: '#7c3aed',
-    glow: '#a78bfa',
-    text: '#ffffff',
-    accent: '#fbbf24',
-};
-
-// --- RENK PALETİ ---
-const PARTICLE_COLORS = [
-    '#FFFFFF',              // Beyaz (Standart)
-    '#52525b',              // Gri (Derinlik)
-    'rgba(255, 215, 0, 0.7)' // ALTIN SARISI (Alpha'yı artırdım ki animasyonda "ben buradayım" desin)
-];
+import { RootStackParamList } from '../types/navigation';
+import { COLORS, FONTS, SIZES } from '../constants/theme'; // Merkezi Tema
 
 // --- HAREKETLİ TOZ ZERRESİ ---
+// Renkleri global temadan alalım ki tutarlı olsun
+const PARTICLE_COLORS = [
+    '#FFFFFF',
+    '#52525b',
+    COLORS.primary // Gold rengi temadan
+];
+
 const FloatingParticle = ({ initialTop, left, size, color }: { initialTop: number, left: number, size: number, color: string }) => {
     const floatAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
 
-    // Bu parçacık "Özel Sarı" mı kontrol et
-    const isGold = color.includes('255, 215, 0');
+    // Theme rengiyle kontrol ediyoruz
+    const isGold = color === COLORS.primary;
 
     useEffect(() => {
-        // 1. YÜKSELME (Hepsi için aynı ahenk)
         const duration = 20000 + Math.random() * 20000;
-
         Animated.loop(
             Animated.timing(floatAnim, {
                 toValue: 1,
@@ -46,18 +36,15 @@ const FloatingParticle = ({ initialTop, left, size, color }: { initialTop: numbe
             })
         ).start();
 
-        // 2. YANIP SÖNME (Twinkle) - MANTIK BURADA DEĞİŞİYOR
         Animated.loop(
             Animated.sequence([
                 Animated.timing(opacityAnim, {
-                    // Sarıysa TAM PARLASIN (1.0), diğerleri sönük kalsın (0.5)
                     toValue: isGold ? 0.7 : 0.3,
-                    duration: isGold ? 2000 : 3000, // Sarılar biraz daha hızlı tepki versin
+                    duration: isGold ? 2000 : 3000,
                     useNativeDriver: true
                 }),
                 Animated.timing(opacityAnim, {
-                    // Sarıysa neredeyse tamamen sönsün (dramatik etki), diğerleri hafif kısılsın
-                    toValue: isGold ? 0.1 : 0.1,
+                    toValue: 0.1,
                     duration: isGold ? 2000 : 3000,
                     useNativeDriver: true
                 }),
@@ -67,7 +54,7 @@ const FloatingParticle = ({ initialTop, left, size, color }: { initialTop: numbe
 
     const translateY = floatAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, -height - 100],
+        outputRange: [0, -SIZES.height - 100],
     });
 
     return (
@@ -82,8 +69,7 @@ const FloatingParticle = ({ initialTop, left, size, color }: { initialTop: numbe
                     backgroundColor: color,
                     opacity: opacityAnim,
                     transform: [{ translateY }],
-                    // Sarıysa ona ekstra bir gölge (glow) verelim ki parlasın
-                    shadowColor: isGold ? '#ffd700' : 'transparent',
+                    shadowColor: isGold ? COLORS.primary : 'transparent',
                     shadowOpacity: isGold ? 1 : 0,
                     shadowRadius: isGold ? 4 : 0,
                 },
@@ -93,17 +79,16 @@ const FloatingParticle = ({ initialTop, left, size, color }: { initialTop: numbe
 };
 
 export default function WelcomeScreen() {
-    // 100 ADET PARÇACIK
-    const particles = Array.from({ length: 100 }).map((_, i) => ({
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { t } = useTranslation();
+
+    const particles = Array.from({ length: 60 }).map((_, i) => ({
         id: i,
-        left: Math.random() * width,
-        initialTop: Math.random() * height * 1.5,
+        left: Math.random() * SIZES.width,
+        initialTop: Math.random() * SIZES.height * 1.5,
         size: Math.random() * 2.5 + 0.5,
-        // Renkleri rastgele ata
         color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
     }));
-
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     return (
         <View style={styles.container}>
@@ -116,17 +101,10 @@ export default function WelcomeScreen() {
                 style={StyleSheet.absoluteFill}
             />
 
-
             {/* PARTICLES */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
                 {particles.map((p) => (
-                    <FloatingParticle
-                        key={p.id}
-                        initialTop={p.initialTop}
-                        left={p.left}
-                        size={p.size}
-                        color={p.color}
-                    />
+                    <FloatingParticle key={p.id} {...p} />
                 ))}
             </View>
 
@@ -134,7 +112,6 @@ export default function WelcomeScreen() {
 
                 {/* --- ORTA KISIM --- */}
                 <View style={styles.centerContent}>
-
                     <View style={styles.logoStage}>
                         <Image
                             source={require('../assets/logo.png')}
@@ -144,7 +121,7 @@ export default function WelcomeScreen() {
                     </View>
 
                     <View style={styles.textWrapper}>
-                        <Text style={styles.title}>VocabAI</Text>
+                        <Text style={styles.title}>{t('onboarding.welcome.appName')}</Text>
 
                         <LinearGradient
                             colors={['transparent', 'rgba(255,255,255,0.8)', 'transparent']}
@@ -152,14 +129,13 @@ export default function WelcomeScreen() {
                         />
 
                         <Text style={styles.subtitle}>
-                            ZİHNİNİZ İÇİN <Text style={styles.italicText}>özel</Text> SEÇKİ
+                            {t('onboarding.welcome.sloganPart1')} <Text style={styles.italicText}>{t('onboarding.welcome.sloganItalic')}</Text> {t('onboarding.welcome.sloganPart2')}
                         </Text>
                     </View>
                 </View>
 
                 {/* --- ALT KISIM --- */}
                 <View style={styles.bottomSection}>
-
                     <TouchableOpacity
                         activeOpacity={0.7}
                         style={styles.outlineButtonWrapper}
@@ -173,7 +149,7 @@ export default function WelcomeScreen() {
                             end={{ x: 1, y: 0 }}
                             style={styles.outlineGradient}
                         >
-                            <Text style={styles.buttonText}>BAŞLA</Text>
+                            <Text style={styles.buttonText}>{t('onboarding.welcome.start')}</Text>
 
                             <View style={styles.absoluteIcon}>
                                 <Text style={styles.arrowIcon}>→</Text>
@@ -186,22 +162,19 @@ export default function WelcomeScreen() {
                             end={{ x: 1, y: 0 }}
                             style={styles.techLineTop}
                         />
-
                         <LinearGradient
                             colors={['transparent', '#fff', 'transparent']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={styles.techLineBottom}
                         />
-
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.loginBtn}>
                         <Text style={styles.loginText}>
-                            ZATEN ÜYE MİSİNİZ? <Text style={{ color: '#fff', fontWeight: 'bold' }}>GİRİŞ YAP</Text>
+                            {t('onboarding.welcome.haveAccount')} <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('onboarding.welcome.login')}</Text>
                         </Text>
                     </TouchableOpacity>
-
                 </View>
 
             </SafeAreaView>
@@ -233,8 +206,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 40,
-        width: width * 0.6,
-        height: width * 0.6,
+        width: SIZES.width * 0.6,
+        height: SIZES.width * 0.6,
         position: 'relative',
     },
     logo: {
@@ -253,7 +226,9 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 48,
         color: COLORS.text,
-        fontFamily: 'PlayfairDisplay-Bold',
+        // DİKKAT: App.tsx'te Merriweather-Bold yüklü, o yüzden onu kullanıyoruz.
+        // Playfair istiyorsan ayrıca yüklememiz gerek.
+        fontFamily: FONTS.bold,
         letterSpacing: 2,
         textAlign: 'center',
         textShadowColor: 'rgba(124, 58, 237, 0.6)',
@@ -266,15 +241,17 @@ const styles = StyleSheet.create({
         marginVertical: 12,
     },
     subtitle: {
-        color: 'rgba(255,255,255,0.6)',
+        color: COLORS.textSecondary,
         fontSize: 12,
-        fontFamily: 'Inter-Regular',
+        fontFamily: FONTS.regular,
         letterSpacing: 4,
         textTransform: 'uppercase',
     },
     italicText: {
-        fontFamily: 'PlayfairDisplay-Regular',
-        fontStyle: 'italic',
+        // App.tsx'te tanımladığımız Italics stili varsa onu kullanırız
+        // Yoksa FONTS.titleItalic (Merriweather-Bold)
+        fontFamily: FONTS.titleItalic,
+        fontStyle: 'italic', // Font destekliyorsa
         color: '#fff',
         textTransform: 'lowercase',
         fontSize: 14,
@@ -331,7 +308,7 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#fff',
         fontSize: 16,
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: FONTS.semiBold,
         letterSpacing: 6,
         fontWeight: '600',
         textAlign: 'center',
@@ -351,9 +328,9 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     loginText: {
-        color: 'rgba(255,255,255,0.3)',
+        color: COLORS.textSecondary,
         fontSize: 11,
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: FONTS.semiBold,
         letterSpacing: 1.5,
     },
 });

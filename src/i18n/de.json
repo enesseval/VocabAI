@@ -1,0 +1,60 @@
+{
+    "onboarding": {
+        "welcome": {
+            "appName": "VocabAI",
+            "sloganPart1": "KURATIERT FÜR",
+            "sloganItalic": "Ihren",
+            "sloganPart2": "VERSTAND",
+            "start": "STARTEN",
+            "haveAccount": "BEREITS MITGLIED?",
+            "login": "ANMELDEN"
+        },
+        "identity": {
+            "title": "Wer",
+            "highlight": "Lernt?",
+            "subtitle": "Ihre Identität formt Ihre Lernreise.",
+            "nameLabel": "NAME",
+            "ageLabel": "ALTER",
+            "namePlaceholder": "Geben Sie Ihren Namen ein"
+        },
+        "language": {
+            "title": "Ihre",
+            "highlight": "Welt",
+            "subtitle": "Definieren Sie den Kontext für Ihre Vokabelreise.",
+            "nativeLabel": "MUTTERSPRACHE",
+            "targetLabel": "ZIELSPRACHE",
+            "placeholder": "Auswählen",
+            "options": {
+                "tr": "Türkisch",
+                "en": "Englisch",
+                "de": "Deutsch"
+            }
+        },
+        "purpose": {
+            "title": "Ihr",
+            "highlight": "Ziel",
+            "subtitle": "Was treibt Ihren Lernwunsch an?",
+            "options": {
+                "career": "Karriere",
+                "careerSub": "Beruflich vorankommen",
+                "culture": "Kultur",
+                "cultureSub": "Mit Einheimischen verbinden",
+                "brain": "Gehirntraining",
+                "brainSub": "Geistig fit bleiben",
+                "exam": "Prüfungsvorbereitung",
+                "examSub": "Tests bestehen"
+            }
+        },
+        "interests": {
+            "title": "Ihre",
+            "highlight": "Welt",
+            "subtitle": "Kuratieren Sie Ihre intellektuelle Landschaft."
+        },
+        "common": {
+            "continue": "WEITER",
+            "createPersona": "PERSONA ERSTELLEN",
+            "cancel": "Abbrechen",
+            "confirm": "Fertig"
+        }
+    }
+}

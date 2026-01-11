@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -7,23 +7,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
+import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Kayıt için
+
+import { RootStackParamList } from '../types/navigation';
 import OnboardingHeader from '../components/OnboardingHeader';
 import OnboardingFooter from '../components/OnboardingFooter';
+import { useOnboarding } from '../context/OnboardingContext';
+import { COLORS, FONTS, SIZES } from '../constants/theme';
 
-const COLORS = {
-    bg: '#050406',
-    primary: '#fbbf24', // Gold
-    cardBg: 'rgba(255,255,255,0.05)',
-    activeBorder: '#fbbf24',
-    activeGlow: 'rgba(251, 191, 36, 0.15)',
-};
-
-type Topic = {
-    id: number;
-    name: string;
-    icon: keyof typeof Ionicons.glyphMap;
-};
+type Topic = { id: number; name: string; icon: keyof typeof Ionicons.glyphMap; };
 
 const TOPICS: Topic[] = [
     { id: 1, name: 'Teknoloji', icon: 'hardware-chip-outline' },
@@ -40,29 +33,11 @@ const TOPICS: Topic[] = [
 
 const TopicPill = ({ item, isSelected, onPress }: { item: Topic, isSelected: boolean, onPress: () => void }) => {
     return (
-        <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={onPress}
-            style={[
-                styles.pill,
-                isSelected && styles.pillSelected
-            ]}
-        >
+        <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={[styles.pill, isSelected && styles.pillSelected]}>
             <View style={styles.pillContent}>
-                <Ionicons
-                    name={item.icon}
-                    size={18}
-                    color={isSelected ? COLORS.primary : 'rgba(255,255,255,0.6)'}
-                    style={{ marginRight: 8 }}
-                />
-                <Text style={[
-                    styles.pillText,
-                    isSelected && { color: COLORS.primary, fontWeight: 'bold' }
-                ]}>
-                    {item.name}
-                </Text>
+                <Ionicons name={item.icon} size={18} color={isSelected ? COLORS.primary : 'rgba(255,255,255,0.6)'} style={{ marginRight: 8 }} />
+                <Text style={[styles.pillText, isSelected && { color: COLORS.primary, fontFamily: FONTS.semiBold }]}>{item.name}</Text>
             </View>
-
             {isSelected && <View style={styles.pillGlow} />}
         </TouchableOpacity>
     );
@@ -70,14 +45,29 @@ const TopicPill = ({ item, isSelected, onPress }: { item: Topic, isSelected: boo
 
 export default function InterestsScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const [selectedTopics, setSelectedTopics] = useState<number[]>([]);
+    const { t } = useTranslation();
+    const { userProfile, updateProfile } = useOnboarding();
 
     const toggleTopic = (id: number) => {
         Haptics.selectionAsync();
-        if (selectedTopics.includes(id)) {
-            setSelectedTopics(selectedTopics.filter(item => item !== id));
+        const current = userProfile.interests;
+        if (current.includes(id)) {
+            updateProfile({ interests: current.filter(item => item !== id) });
         } else {
-            setSelectedTopics([...selectedTopics, id]);
+            updateProfile({ interests: [...current, id] });
+        }
+    };
+
+    const handleFinish = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        try {
+            // Şimdilik sadece logluyoruz, DB yok.
+            // AsyncStorage ile lokal kayıt:
+            await AsyncStorage.setItem('user_persona', JSON.stringify(userProfile));
+            console.log("KAYDEDİLEN PROFİL:", userProfile);
+            // navigation.replace('Home'); // Ana sayfaya git
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -87,27 +77,20 @@ export default function InterestsScreen() {
             <LinearGradient colors={['#1e1b4b', '#050406', '#000']} locations={[0, 0.3, 1]} style={StyleSheet.absoluteFill} />
 
             <SafeAreaView style={styles.safeArea}>
-                <OnboardingHeader currentStep={4} />
+                <OnboardingHeader
+                    currentStep={4}
+                    title={t('onboarding.interests.title')}
+                    highlight={t('onboarding.interests.highlight')}
+                    subtitle={t('onboarding.interests.subtitle')}
+                />
 
-                <View style={styles.titleContainer}>
-                    <Text style={styles.mainTitle}>Senin</Text>
-                    <Text style={styles.highlightTitle}>Dünyan</Text>
-                    <Text style={styles.subtitle}>
-                        Entelektüel manzaranı oluştur. Seni yansıtan alanları seç.
-                    </Text>
-                </View>
-
-                <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                >
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150, alignItems: 'center' }} showsVerticalScrollIndicator={false}>
                     <View style={styles.pillContainer}>
                         {TOPICS.map((item) => (
                             <TopicPill
                                 key={item.id}
                                 item={item}
-                                isSelected={selectedTopics.includes(item.id)}
+                                isSelected={userProfile.interests.includes(item.id)}
                                 onPress={() => toggleTopic(item.id)}
                             />
                         ))}
@@ -115,13 +98,9 @@ export default function InterestsScreen() {
                 </ScrollView>
 
                 <OnboardingFooter
-                    text="PERSONA OLUŞTUR"
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                        console.log("Persona Oluşturuluyor:", selectedTopics);
-                        // Future: Navigate to next screen
-                    }}
-                    disabled={selectedTopics.length === 0}
+                    text={t('onboarding.common.createPersona')}
+                    onPress={handleFinish}
+                    disabled={userProfile.interests.length === 0}
                 />
             </SafeAreaView>
         </View>
@@ -130,53 +109,11 @@ export default function InterestsScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
-    safeArea: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
-
-    titleContainer: { marginTop: 10, marginBottom: 30, alignItems: 'center' },
-    mainTitle: { fontSize: 42, color: '#fff', fontFamily: 'PlayfairDisplay-Regular', textAlign: 'center' },
-    highlightTitle: { fontSize: 42, color: '#fbbf24', fontFamily: 'PlayfairDisplay-Italic', fontWeight: 'bold', marginBottom: 12, textAlign: 'center' },
-    subtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16, textAlign: 'center', lineHeight: 24, paddingHorizontal: 20 },
-
-    scrollContent: { paddingBottom: 150, alignItems: 'center' },
-
-    pillContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 12,
-        width: '100%',
-    },
-
-    pill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 999,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    pillSelected: {
-        borderColor: COLORS.activeBorder,
-        backgroundColor: COLORS.activeGlow,
-    },
-    pillContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        zIndex: 2,
-    },
-    pillText: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: 15,
-        fontWeight: '500',
-        letterSpacing: 0.5,
-    },
-    pillGlow: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: COLORS.activeBorder,
-        opacity: 0.05,
-    },
+    safeArea: { flex: 1, paddingHorizontal: SIZES.padding },
+    pillContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, width: '100%', marginTop: 20 },
+    pill: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
+    pillSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.activeGlow },
+    pillContent: { flexDirection: 'row', alignItems: 'center', zIndex: 2 },
+    pillText: { color: 'rgba(255,255,255,0.7)', fontSize: 15, fontFamily: FONTS.regular, letterSpacing: 0.5 },
+    pillGlow: { ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.primary, opacity: 0.05 },
 });

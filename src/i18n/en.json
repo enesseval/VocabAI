@@ -1,0 +1,60 @@
+{
+    "onboarding": {
+        "welcome": {
+            "appName": "VocabAI",
+            "sloganPart1": "CURATED FOR",
+            "sloganItalic": "your",
+            "sloganPart2": "MIND",
+            "start": "BEGIN",
+            "haveAccount": "EXISTING MEMBER?",
+            "login": "LOG IN"
+        },
+        "identity": {
+            "title": "Who is",
+            "highlight": "Learning?",
+            "subtitle": "Your identity shapes your learning journey.",
+            "nameLabel": "NAME",
+            "ageLabel": "AGE",
+            "namePlaceholder": "Enter your name"
+        },
+        "language": {
+            "title": "Your",
+            "highlight": "World",
+            "subtitle": "Define the context for your vocabulary journey.",
+            "nativeLabel": "NATIVE LANGUAGE",
+            "targetLabel": "TARGET LANGUAGE",
+            "placeholder": "Select",
+            "options": {
+                "tr": "Turkish",
+                "en": "English",
+                "de": "German"
+            }
+        },
+        "purpose": {
+            "title": "Your",
+            "highlight": "Purpose",
+            "subtitle": "What drives your desire to learn?",
+            "options": {
+                "career": "Career",
+                "careerSub": "Advance professionally",
+                "culture": "Culture",
+                "cultureSub": "Connect with locals",
+                "brain": "Brain Training",
+                "brainSub": "Keep your mind sharp",
+                "exam": "Exam Prep",
+                "examSub": "Ace your tests"
+            }
+        },
+        "interests": {
+            "title": "Your",
+            "highlight": "Archetype",
+            "subtitle": "Curate your intellectual landscape."
+        },
+        "common": {
+            "continue": "CONTINUE",
+            "createPersona": "CREATE PERSONA",
+            "cancel": "Cancel",
+            "confirm": "Done"
+        }
+    }
+}

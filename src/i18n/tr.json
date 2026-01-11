@@ -1,0 +1,60 @@
+{
+  "onboarding": {
+    "welcome": {
+      "appName": "VocabAI",
+      "sloganPart1": "ZİHNİNİZ İÇİN",
+      "sloganItalic": "özel",
+      "sloganPart2": "SEÇKİ",
+      "start": "BAŞLA",
+      "haveAccount": "ZATEN ÜYE MİSİNİZ?",
+      "login": "GİRİŞ YAP"
+    },
+    "identity": {
+      "title": "Seni",
+      "highlight": "Tanıyalım",
+      "subtitle": "En iyi deneyimi sunabilmemiz için kim olduğunu bilmeliyiz.",
+      "nameLabel": "İSMİN",
+      "ageLabel": "YAŞIN",
+      "namePlaceholder": "İsminizi girin"
+    },
+    "language": {
+      "title": "Senin",
+      "highlight": "Dünyan",
+      "subtitle": "Kelime yolculuğunun bağlamını belirle.",
+      "nativeLabel": "ANADİLİN",
+      "targetLabel": "ÖĞRENMEK İSTEDİĞİN DİL",
+      "placeholder": "Seçiniz",
+      "options": {
+        "tr": "Türkçe",
+        "en": "İngilizce",
+        "de": "Almanca"
+      }
+    },
+    "purpose": {
+      "title": "Amacın",
+      "highlight": "Nedir?",
+      "subtitle": "Seni öğrenmeye iten asıl motivasyon ne?",
+      "options": {
+        "career": "Kariyer",
+        "careerSub": "Profesyonel ilerleme",
+        "culture": "Kültür",
+        "cultureSub": "Yerel halkla bağ kur",
+        "brain": "Beyin Egzersizi",
+        "brainSub": "Zihnini dinç tut",
+        "exam": "Sınav Hazırlığı",
+        "examSub": "Sınavlarda başarı"
+      }
+    },
+    "interests": {
+      "title": "Senin",
+      "highlight": "Dünyan",
+      "subtitle": "Entelektüel manzaranı oluştur. Seni yansıtan alanları seç."
+    },
+    "common": {
+      "continue": "DEVAM ET",
+      "createPersona": "PERSONA OLUŞTUR",
+      "cancel": "İptal",
+      "confirm": "Tamam"
+    }
+  }
+}
