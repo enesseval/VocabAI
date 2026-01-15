@@ -1,129 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons'; // Lucide yerine mevcut projende Ionicons varsa
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-import { RootStackParamList } from '../types/navigation';
 import { COLORS, FONTS } from '../constants/theme';
 import { useOnboarding } from '../context/OnboardingContext';
-import { useVocabulary } from '../context/VocabularyContext';
+
+const { width } = Dimensions.get('window');
+
+// Örnek "Paket" verisi (Dinamik hale gelecek)
+const DAILY_PACKS: {
+    id: number;
+    title: string;
+    level: string;
+    color: readonly [string, string, ...string[]];
+    icon: string;
+}[] = [
+        { id: 1, title: 'Tech & AI', level: 'B2', color: ['#4F46E515', '#4F46E500'], icon: 'hardware-chip-outline' },
+        { id: 2, title: 'Travel', level: 'A2', color: ['#0EA5E915', '#0EA5E900'], icon: 'airplane-outline' },
+        { id: 3, title: 'Business', level: 'C1', color: ['#F59E0B15', '#F59E0B00'], icon: 'briefcase-outline' },
+    ];
 
 export default function HomeScreen() {
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const { userProfile, resetProfile } = useOnboarding();
-    const { savedWords } = useVocabulary();
-    const [hasReadToday, setHasReadToday] = useState(false);
-
-    useEffect(() => {
-        checkDailyStatus();
-    }, []);
-
-    const checkDailyStatus = async () => {
-        const lastFetchDate = await AsyncStorage.getItem('last_story_date');
-        const today = new Date().toISOString().split('T')[0];
-        setHasReadToday(lastFetchDate === today);
-    };
-
-    const handleReset = async () => {
-        await AsyncStorage.clear();
-        resetProfile();
-        navigation.replace('Welcome');
-    };
+    const navigation = useNavigation<any>();
+    const { userProfile } = useOnboarding();
 
     return (
         <View style={styles.container}>
             <StatusBar style="light" />
-            <LinearGradient colors={['#1e1b4b', '#050406', '#000']} style={StyleSheet.absoluteFill} />
+            <LinearGradient colors={['#1e1b4b', '#000']} style={StyleSheet.absoluteFill} />
 
-            <SafeAreaView style={styles.safeArea}>
-                {/* HEADER */}
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.greeting}>HOŞ GELDİN,</Text>
-                        <Text style={styles.username}>{userProfile?.name || 'Gezgin'}</Text>
-                    </View>
-                    <TouchableOpacity style={styles.profileBtn} onPress={handleReset}>
-                        {/* Avatar yerine baş harf */}
-                        <Text style={styles.avatarText}>{userProfile?.name?.charAt(0)}</Text>
-                    </TouchableOpacity>
-                </View>
+            <SafeAreaView style={{ flex: 1 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
 
-                <ScrollView contentContainerStyle={styles.content}>
-
-                    {/* STATS ROW */}
-                    <View style={styles.statsRow}>
-                        <View style={styles.statCard}>
-                            <Text style={styles.statNumber}>{savedWords.length}</Text>
-                            <Text style={styles.statLabel}>Kelime</Text>
+                    {/* 1. Header: Profil & Selamlama */}
+                    <View style={styles.header}>
+                        <View>
+                            <Text style={styles.greeting}>MERHABA</Text>
+                            <Text style={styles.username}>{userProfile?.name || 'Gezgin'}</Text>
                         </View>
-                        <View style={styles.statCard}>
-                            <Text style={styles.statNumber}>1</Text>
-                            <Text style={styles.statLabel}>Gün Serisi</Text>
-                        </View>
-                        <View style={styles.statCard}>
-                            <Text style={styles.statNumber}>{userProfile?.targetLang?.toUpperCase()}</Text>
-                            <Text style={styles.statLabel}>Hedef</Text>
-                        </View>
-                    </View>
-
-                    {/* MAIN ACTION CARD */}
-                    <View style={[styles.mainCard, hasReadToday && styles.completedCard]}>
-                        <View style={styles.cardHeader}>
-                            <Text style={styles.cardTitle}>GÜNLÜK HİKAYE</Text>
-                            {hasReadToday && <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />}
-                        </View>
-
-                        <Text style={styles.cardDesc}>
-                            {hasReadToday
-                                ? "Bugünkü hikayeni tamamladın! Yarın yeni bir macera seni bekliyor."
-                                : "Yapay zeka senin için yeni bir hikaye hazırlamaya hazır."}
-                        </Text>
-
-                        <TouchableOpacity
-                            style={[styles.actionBtn, hasReadToday && styles.secondaryBtn]}
-                            onPress={() => navigation.navigate('ReadStory')}
-                        >
-                            <Text style={[styles.btnText, hasReadToday && { color: COLORS.text }]}>
-                                {hasReadToday ? "Tekrar Oku" : "Hikayeyi Başlat"}
-                            </Text>
-                            <Ionicons name={hasReadToday ? "book-outline" : "play"} size={20} color={hasReadToday ? COLORS.text : "#000"} />
+                        <TouchableOpacity style={styles.profileBtn}>
+                            <Ionicons name="person" size={20} color="#fff" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* VOCABULARY TEASER */}
+                    {/* 2. Daily Drops (Yatay Kaydırmalı Kartlar) */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>SON KAYDEDİLENLER</Text>
-                            <TouchableOpacity>
-                                <Text style={styles.seeAll}>Tümü</Text>
+                            <View>
+                                <Text style={styles.sectionTitle}>Günün Hikayesi</Text>
+                                <Text style={styles.sectionSubtitle}>Sana özel seçilmiş AI içerikleri</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => navigation.navigate('ReadStory')} style={styles.shuffleBtn}>
+                                <Ionicons name="shuffle" size={16} color={COLORS.textSecondary} />
                             </TouchableOpacity>
                         </View>
 
-                        {savedWords.length > 0 ? (
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-                                {savedWords.slice(0, 5).map((w, i) => (
-                                    <View key={i} style={styles.wordCard}>
-                                        <Text style={styles.wordText}>{w.word}</Text>
-                                        <Text style={styles.transText}>{w.translation}</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 10 }}>
+                            {/* "Create New" Card */}
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('ReadStory')}
+                                activeOpacity={0.9}
+                                style={[styles.card, styles.createCard]}
+                            >
+                                <LinearGradient
+                                    colors={[COLORS.primary, '#7c3aed']}
+                                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <View style={styles.cardIconBg}>
+                                    <Ionicons name="sparkles" size={24} color="#fff" />
+                                </View>
+                                <View>
+                                    <Text style={styles.createTitle}>Yeni Oluştur</Text>
+                                    <Text style={styles.createSubtitle}>AI ile hikaye yarat</Text>
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Existing Packs */}
+                            {DAILY_PACKS.map((pack) => (
+                                <TouchableOpacity key={pack.id} style={styles.card}>
+                                    <LinearGradient
+                                        colors={pack.color}
+                                        style={StyleSheet.absoluteFill}
+                                    />
+                                    <View style={styles.cardHeader}>
+                                        <View style={styles.levelBadge}>
+                                            <Text style={styles.levelText}>{pack.level}</Text>
+                                        </View>
+                                        <Ionicons name={pack.icon as any} size={20} color={COLORS.text} />
                                     </View>
-                                ))}
-                            </ScrollView>
-                        ) : (
-                            <View style={styles.emptyState}>
-                                <Text style={styles.emptyText}>Henüz kelime kaydetmedin.</Text>
-                            </View>
-                        )}
+                                    <View>
+                                        <Text style={styles.cardTitle}>{pack.title}</Text>
+                                        <Text style={styles.cardSubtitle}>Kelime Paketi</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
                     </View>
 
-                    <View style={styles.devFooter}>
-                        <Ionicons name="flask-outline" size={14} color="rgba(255,255,255,1)" />
-                        <Text style={styles.devText}>VocabAI Beta v0.1</Text>
-                        <Text style={styles.devText}>Bu sayfa henüz deney aşamasında</Text>
+                    {/* 3. My Vocabulary (List Style) */}
+                    <View style={styles.section}>
+                        <View style={[styles.sectionHeader, { paddingHorizontal: 24 }]}>
+                            <Text style={styles.sectionTitle}>Kelime Depom</Text>
+                            <TouchableOpacity>
+                                <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>Tümünü Gör</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Empty State or List */}
+                        <View style={styles.emptyBox}>
+                            <Ionicons name="library-outline" size={40} color="rgba(255,255,255,0.2)" />
+                            <Text style={styles.emptyText}>Henüz kaydedilmiş kelime yok.</Text>
+                        </View>
                     </View>
 
                 </ScrollView>
@@ -133,43 +124,30 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    devFooter: { marginTop: 40, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6, paddingBottom: 20 },
-    devText: { color: 'rgba(255,255,255,1)', fontSize: 14, fontFamily: FONTS.regular, letterSpacing: 1 },
-    container: { flex: 1, backgroundColor: COLORS.bg },
-    safeArea: { flex: 1, padding: 24 },
+    container: { flex: 1, backgroundColor: '#000' },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 10, marginBottom: 20 },
+    greeting: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: FONTS.bold, letterSpacing: 1 },
+    username: { color: '#fff', fontSize: 28, fontFamily: FONTS.titleItalic },
+    profileBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
 
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 },
-    greeting: { color: COLORS.textSecondary, fontSize: 12, fontFamily: FONTS.bold, letterSpacing: 1 },
-    username: { color: COLORS.text, fontSize: 28, fontFamily: FONTS.titleItalic },
-    profileBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center' },
-    avatarText: { color: '#fff', fontSize: 20, fontFamily: FONTS.bold },
+    section: { marginBottom: 30 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 24, marginBottom: 15 },
+    sectionTitle: { color: '#fff', fontSize: 20, fontFamily: FONTS.bold },
+    sectionSubtitle: { color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 2 },
+    shuffleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
 
-    content: { gap: 30 },
+    card: { width: 160, height: 180, borderRadius: 24, backgroundColor: '#1C1C1E', marginRight: 15, padding: 16, justifyContent: 'space-between', overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+    createCard: { borderWidth: 0 },
+    cardIconBg: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+    createTitle: { color: '#fff', fontSize: 18, fontFamily: FONTS.bold },
+    createSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
 
-    statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-    statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-    statNumber: { color: COLORS.text, fontSize: 20, fontFamily: FONTS.bold, marginBottom: 4 },
-    statLabel: { color: COLORS.textSecondary, fontSize: 12, fontFamily: FONTS.regular },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    levelBadge: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+    levelText: { color: '#fff', fontSize: 10, fontFamily: FONTS.bold },
+    cardTitle: { color: '#fff', fontSize: 18, fontFamily: FONTS.bold },
+    cardSubtitle: { color: 'rgba(255,255,255,0.4)', fontSize: 12 },
 
-    mainCard: { backgroundColor: COLORS.primary, borderRadius: 24, padding: 24 },
-    completedCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    cardTitle: { color: '#000', fontSize: 14, fontFamily: FONTS.bold, letterSpacing: 1, opacity: 0.7 },
-    cardDesc: { color: '#000', fontSize: 16, fontFamily: FONTS.regular, lineHeight: 24, marginBottom: 24, opacity: 0.9 },
-
-    actionBtn: { backgroundColor: '#000', padding: 16, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
-    secondaryBtn: { backgroundColor: 'rgba(255,255,255,0.1)' },
-    btnText: { color: '#fff', fontSize: 16, fontFamily: FONTS.bold },
-
-    section: { gap: 16 },
-    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    sectionTitle: { color: COLORS.text, fontSize: 16, fontFamily: FONTS.bold },
-    seeAll: { color: COLORS.secondary, fontSize: 14, fontFamily: FONTS.regular },
-
-    wordCard: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, minWidth: 120 },
-    wordText: { color: COLORS.text, fontSize: 16, fontFamily: FONTS.bold, marginBottom: 4 },
-    transText: { color: COLORS.textSecondary, fontSize: 14 },
-
-    emptyState: { padding: 20, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 12 },
-    emptyText: { color: COLORS.textSecondary, fontStyle: 'italic' }
+    emptyBox: { marginHorizontal: 24, height: 120, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderStyle: 'dashed' },
+    emptyText: { color: 'rgba(255,255,255,0.3)', marginTop: 10, fontSize: 14 }
 });

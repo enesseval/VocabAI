@@ -1,4 +1,4 @@
-// App.tsx 
+// App.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -6,20 +6,23 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Tipleri yeni dosyadan çekiyoruz
+// Tipler
 import { RootStackParamList } from './src/types/navigation';
 
+// Context & Utils
 import './src/i18n';
 import { OnboardingProvider } from './src/context/OnboardingContext';
+import { VocabularyProvider } from '@/context/VocabularyContext';
 
-// Importları standart hale getirelim
+// Ekranlar
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import OnboardingScreen from './src/screens/onboarding/OnboardingScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReadStoryScreen from '@/screens/ReadStoryScreen';
-import { VocabularyProvider } from '@/context/VocabularyContext';
+
+// 🔥 YENİ: Tab Navigator'ı import ediyoruz
+import TabNavigator from './src/navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -33,6 +36,7 @@ export default function App() {
     'Inter-SemiBold': require('./src/assets/fonts/Inter-SemiBold.ttf'),
   });
 
+  // Başlangıç rotası tipi güncellendi
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Welcome');
   const [isReady, setIsReady] = useState(false);
 
@@ -42,7 +46,8 @@ export default function App() {
         // Kullanıcı var mı kontrol et
         const user = await AsyncStorage.getItem('user_persona');
         if (user) {
-          setInitialRoute('Home');
+          // 🔥 Eğer kullanıcı varsa direkt Tab Yapısına (Ana Uygulama) git
+          setInitialRoute('MainTabs');
         }
       } catch (e) {
         console.warn(e);
@@ -55,12 +60,12 @@ export default function App() {
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && isReady) {
       await SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, isReady]);
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !isReady) {
     return null;
   }
 
@@ -70,12 +75,31 @@ export default function App() {
         <SafeAreaProvider>
           <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
             <NavigationContainer>
-              {/* initialRouteName'i dinamik yaptık */}
               <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+
+                {/* Diğer ekranlar... */}
                 <Stack.Screen name="Welcome" component={WelcomeScreen} />
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                <Stack.Screen name="ReadStory" component={ReadStoryScreen} />
-                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="MainTabs" component={TabNavigator} />
+
+                {/* 1. YENİ HİKAYE (Normal Açılış) */}
+                <Stack.Screen
+                  name="ReadStory"
+                  component={ReadStoryScreen}
+                  options={{ animation: 'slide_from_bottom' }}
+                />
+
+                {/* 2. GEÇMİŞ HİKAYE (Bottom Sheet Görünümü) */}
+                <Stack.Screen
+                  name="StoryModal"
+                  component={ReadStoryScreen}
+                  options={{
+                    presentation: 'transparentModal', // 🔥 Arkası şeffaf
+                    animation: 'slide_from_bottom',   // Alttan kayarak gelir
+                    headerShown: false,
+                  }}
+                />
+
               </Stack.Navigator>
             </NavigationContainer>
           </View>
