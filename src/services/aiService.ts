@@ -1,18 +1,27 @@
+// src/services/aiService.ts
+
 import { UserProfile } from '../context/OnboardingContext';
-import { Story } from '../types/story';
+import { Story, WordAnalysis } from '../types/story'; // WordAnalysis tipini ekledik
 import { supabase } from '../utils/supabaseClient';
 
-export const generateDailyStory = async (profile: UserProfile): Promise<Story> => {
+// Fonksiyon imzasını değiştirdik: Artık Gramer ve Kelime listesi de istiyor
+export const generateDailyStory = async (
+    profile: UserProfile, 
+    grammarFocus: string = "General", // Varsayılan değer
+    reviewWords: WordAnalysis[] = []   // Varsayılan değer (Boş liste)
+): Promise<Story> => {
     try {
-        console.log("📡 Supabase Edge Function çağrılıyor...");
+        console.log(`📡 AI Servis Tetiklendi: Konu [${grammarFocus}], Kelime [${reviewWords.length} adet]`);
 
-        // Backend'deki 'generate-story' fonksiyonuna istek atıyoruz
         const { data, error } = await supabase.functions.invoke('generate-story', {
             body: {
                 level: profile.level,
                 interests: profile.interests,
                 targetLang: profile.targetLang || 'en',
-                nativeLang: profile.nativeLang || 'tr'
+                nativeLang: profile.nativeLang || 'tr',
+                // 🔥 YENİ PARAMETRELER BACKEND'E GİDİYOR 🔥
+                grammarFocus: grammarFocus,
+                reviewWords: reviewWords.map(w => ({ word: w.word, translation: w.translation })) // Sadece gerekli veriyi yolluyoruz
             }
         });
 
@@ -21,10 +30,7 @@ export const generateDailyStory = async (profile: UserProfile): Promise<Story> =
             throw new Error(`Story generation failed: ${error.message}`);
         }
 
-        // Gelen veri zaten bizim istediğimiz formatta (Prompt'u backend'de ayarladık)
         const aiResponse = data;
-
-        // TTS için full metin oluşturma (Paragrafları birleştiriyoruz)
         const fullContent = aiResponse.segments.map((s: any) => s.target).join('\n\n');
 
         return {

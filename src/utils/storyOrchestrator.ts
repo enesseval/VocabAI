@@ -5,9 +5,27 @@ import { Story } from '../types/story';
 import { FALLBACK_STORIES } from '../data/fallbackStories';
 import { generateDailyStory } from '../services/aiService';
 import { decideStorySource, DecisionContext } from './storyDecisionEngine';
+import {  getGrammarTopic } from '../data/grammarSyllabus';
+import { WordAnalysis } from '../types/story';
 
 const STORAGE_KEY_HISTORY = 'story_history';
 const STORAGE_KEY_LAST_FETCH = 'last_story_date';
+// YENİ YARDIMCI FONKSİYON: Rastgele 4 eski kelime seç
+async function getReviewWords(count: number = 4): Promise<WordAnalysis[]> {
+    try {
+        const json = await AsyncStorage.getItem('user_vocabulary');
+        if (!json) return [];
+        const allWords: WordAnalysis[] = JSON.parse(json);
+        
+        // Basit Karıştırma (Shuffle) ve ilk 'count' kadarını alma
+        // İleride buraya "masteryLevel < 3" filtresi eklenebilir.
+        const shuffled = allWords.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    } catch (e) {
+        console.warn("Kelime geçmişi okunamadı", e);
+        return [];
+    }
+}
 
 /**
  * Task 1.2 - Ana Orkestratör Fonksiyonu
@@ -62,10 +80,23 @@ export const getStoryForUser = async (
 // --- Yardımcı Uygulayıcılar ---
 
 async function handleAIDaily(profile: UserProfile, dateStr: string): Promise<Story> {
-    // 1. Servisi Çağır
-    const story = await generateDailyStory(profile);
+    
+    // 1. Kaçıncı hikaye olduğunu bul (Müfredat sırası için)
+    const historyJson = await AsyncStorage.getItem(STORAGE_KEY_HISTORY);
+    const history = historyJson ? JSON.parse(historyJson) : [];
+    const storyCount = history.length; // 0'dan başlar
 
-    // 2. Kaydet (Cache/History)
+    // 2. Müfredattan konuyu seç
+    const grammarTopic = getGrammarTopic(profile.level, storyCount);
+
+    // 3. Tekrar edilecek kelimeleri seç
+    const reviewWords = await getReviewWords(5);
+
+    // 4. Servisi çağır (Artık gramer ve kelime de gönderiyoruz)
+    // PM Notu: Kullanıcıya hissettirmeden öğretiyoruz!
+    const story = await generateDailyStory(profile, grammarTopic, reviewWords);
+
+    // 5. Kaydet
     await saveToHistory(story);
     await AsyncStorage.setItem(STORAGE_KEY_LAST_FETCH, dateStr);
 
@@ -73,15 +104,23 @@ async function handleAIDaily(profile: UserProfile, dateStr: string): Promise<Sto
 }
 
 async function handleArchive(profile: UserProfile, dateStr: string): Promise<Story> {
+
+    // 1. Geçmişi oku (Kaçıncı hikaye?)
     const historyJson = await AsyncStorage.getItem(STORAGE_KEY_HISTORY);
-    if (!historyJson) return getFallbackStory(profile);
+    const history = historyJson ? JSON.parse(historyJson) : [];
+    const storyCount = history.length;
 
-    const history: Story[] = JSON.parse(historyJson);
-    // En son eklenen hikayeyi döndür (veya o tarihe ait olanı bul)
-    // Basitleştirilmiş mantık: Son hikaye bugünün hikayesidir.
-    const lastStory = history[history.length - 1];
+    const currentGrammarTopic = getGrammarTopic(profile.level, storyCount);
 
-    return lastStory || getFallbackStory(profile);
+    const reviewWords = await getReviewWords(4);
+
+    console.log(`Generating Story... Topic: ${currentGrammarTopic}, Review Words: ${reviewWords.length}`);
+
+    // 4. Servisi çağır (generateDailyStory fonksiyonunu güncellemen gerekecek)
+    // Not: generateDailyStory imzasını değiştirip bu yeni parametreleri kabul eder hale getirmelisin
+    const story = await generateDailyStory(profile, currentGrammarTopic, reviewWords);
+
+    return story;
 }
 
 function getFallbackStory(profile: UserProfile): Story {

@@ -6,6 +6,7 @@ const { width, height } = Dimensions.get('window');
 export const COLORS = {
     bg: '#050406',
     primary: '#fbbf24', // Gold
+    primaryLight: 'rgba(251, 191, 36, 0.7)',
     secondary: '#7c3aed', // Purple
     text: '#ffffff',
     textSecondary: 'rgba(255,255,255,0.6)',

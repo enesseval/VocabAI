@@ -15,7 +15,8 @@ serve(async (req) => {
   }
 
   try {
-    const { level, interests, targetLang, nativeLang } = await req.json();
+    // 1. Gelen Parametreler (Yeni eklenenler: grammarFocus, reviewWords)
+    const { level, interests, targetLang, nativeLang, grammarFocus, reviewWords } = await req.json();
 
     if (!GEMINI_API_KEY) {
       throw new Error('Gemini API Key is missing in Supabase Secrets.');
@@ -28,9 +29,15 @@ serve(async (req) => {
         9: "Cinema and Movies", 10: "Travel and Adventure"
     };
 
+    // İlgi alanlarını metne çevir
     const topicNames = interests.map((id: number) => topicMap[id]).join(", ");
     
-    // Dil isimlerini koddan tam isme çevir (Prompt için)
+    // Kelime listesini string'e çevir (Güvenlik kontrolü ile)
+    const reviewWordsString = reviewWords && reviewWords.length > 0 
+        ? reviewWords.map((w: any) => w.word).join(", ") 
+        : "No specific review words for this session. Introduce 5-7 new relevant words.";
+
+    // Dil isimlerini koddan tam isme çevir
     const getLangName = (code: string) => {
         const map: Record<string, string> = { 'tr': 'Turkish', 'en': 'English', 'de': 'German', 'es': 'Spanish', 'fr': 'French', 'it': 'Italian' };
         return map[code] || 'English';
@@ -39,16 +46,22 @@ serve(async (req) => {
     const tLangName = getLangName(targetLang);
     const nLangName = getLangName(nativeLang);
 
-    // 🔥 MASTER PROMPT (Backend'de Güvende) 🔥
+    // 🔥 GÜNCELLENMİŞ MASTER PROMPT (BAĞLAM FARKINDALIĞI EKLENDİ) 🔥
     const prompt = `
     [SYSTEM SETTING]
-    You are an advanced Linguistic AI Engine.
-    Modes: "Creative Author" (${tLangName}) & "Analytical Translator" (${nLangName}).
+    You are an advanced Linguistic AI Engine designed to teach language through "Context-Aware Storytelling".
+    Target Language: ${tLangName}
+    Native Language (for explanations): ${nLangName}
+    Level: ${level}
 
-    [USER CONTEXT]
-    - Level: ${level}
-    - Native: ${nLangName}
-    - Interests: ${topicNames}
+    [STORY CONFIGURATION]
+    1. **Topic:** ${topicNames} (Choose one main theme).
+    2. **Grammar Focus (THE SECRET SYLLABUS):** "${grammarFocus || 'General'}"
+       - CONSTRAINT: You MUST construct sentences that heavily rely on this grammar structure.
+       - Do NOT explain the grammar in the story. Just use it naturally and frequently.
+    3. **Vocabulary Injection (SPACED REPETITION):**
+       - You MUST include these previously learned words in the story context: [${reviewWordsString}]
+       - The story must feel natural even with these words.
 
     [TASK 1: STORYTELLING]
     1. Create a story (200-300 words) in ${tLangName}.
@@ -56,15 +69,16 @@ serve(async (req) => {
     3. Provide the ${nLangName} translation for EACH paragraph.
 
     [TASK 2: VOCABULARY ANALYSIS]
-    1. Extract 18-25 key vocabulary items.
-    2. CRITICAL RULE: The 'explanation' and 'translation' fields MUST be in ${nLangName}.
-    3. DO NOT use ${tLangName} for the explanation.
-    4. Explain the context (why this word is used here).
+    1. Extract 15-20 key vocabulary items.
+    2. Priority 1: Include the 'reviewWords' used in the story.
+    3. Priority 2: Add new challenging words relevant to the topic.
+    4. CRITICAL RULE: The 'explanation' and 'translation' fields MUST be in ${nLangName}.
 
     [OUTPUT SCHEMA (Raw JSON)]
     {
       "title": "Story Title in ${tLangName}",
       "title_native": "Story Title in ${nLangName}",
+      "grammar_focus_used": "${grammarFocus || 'General'}",
       "segments": [
         {
           "target": "Paragraph 1 text in ${tLangName}",
@@ -79,7 +93,6 @@ serve(async (req) => {
           "native": "Paragraph 3 translation..."
         }
       ],
-      "level": "${level}",
       "vocabulary": [
         {
           "word": "word",
