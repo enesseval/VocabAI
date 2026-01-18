@@ -1,12 +1,10 @@
-// App.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tipler
 import { RootStackParamList } from './src/types/navigation';
@@ -20,15 +18,20 @@ import { VocabularyProvider } from '@/context/VocabularyContext';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import OnboardingScreen from './src/screens/onboarding/OnboardingScreen';
 import ReadStoryScreen from '@/screens/ReadStoryScreen';
-
-// 🔥 YENİ: Tab Navigator'ı import ediyoruz
 import TabNavigator from './src/navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Native Splash'in otomatik kapanmasını engelle (Fontlar yüklenene kadar)
 SplashScreen.preventAutoHideAsync();
 
+SplashScreen.setOptions({
+  duration: 500,
+  fade: true,
+})
+
 export default function App() {
+  // 1. Sadece Fontları Yükle (Başka bir şey bekleme)
   const [fontsLoaded, fontError] = useFonts({
     'Merriweather-Bold': require('./src/assets/fonts/Merriweather-Bold.ttf'),
     'Merriweather-Regular': require('./src/assets/fonts/Merriweather-Regular.ttf'),
@@ -36,36 +39,14 @@ export default function App() {
     'Inter-SemiBold': require('./src/assets/fonts/Inter-SemiBold.ttf'),
   });
 
-  // Başlangıç rotası tipi güncellendi
-  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Welcome');
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const prepare = async () => {
-      try {
-        // Kullanıcı var mı kontrol et
-        const user = await AsyncStorage.getItem('user_persona');
-        if (user) {
-          // 🔥 Eğer kullanıcı varsa direkt Tab Yapısına (Ana Uygulama) git
-          setInitialRoute('MainTabs');
-        }
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setIsReady(true);
-      }
-    };
-
-    prepare();
-  }, []);
-
+  // 2. Fontlar yüklenir yüklenmez Native Splash'i GİZLE
   const onLayoutRootView = useCallback(async () => {
-    if ((fontsLoaded || fontError) && isReady) {
+    if (fontsLoaded || fontError) {
       await SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, isReady]);
+  }, [fontsLoaded, fontError]);
 
-  if ((!fontsLoaded && !fontError) || !isReady) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
@@ -73,29 +54,30 @@ export default function App() {
     <OnboardingProvider>
       <VocabularyProvider>
         <SafeAreaProvider>
+          {/* Layout yüklendiği an Native Splash gidecek, alttaki WelcomeScreen görünecek */}
           <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
             <NavigationContainer>
-              <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+              {/* initialRouteName her zaman 'Welcome' olsun ki animasyonu görelim */}
+              <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Welcome">
 
-                {/* Diğer ekranlar... */}
+                {/* Bu ekran artık bizim "Custom Splash" ekranımız */}
                 <Stack.Screen name="Welcome" component={WelcomeScreen} />
+
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                 <Stack.Screen name="MainTabs" component={TabNavigator} />
 
-                {/* 1. YENİ HİKAYE (Normal Açılış) */}
                 <Stack.Screen
                   name="ReadStory"
                   component={ReadStoryScreen}
                   options={{ animation: 'slide_from_bottom' }}
                 />
 
-                {/* 2. GEÇMİŞ HİKAYE (Bottom Sheet Görünümü) */}
                 <Stack.Screen
                   name="StoryModal"
                   component={ReadStoryScreen}
                   options={{
-                    presentation: 'transparentModal', // 🔥 Arkası şeffaf
-                    animation: 'slide_from_bottom',   // Alttan kayarak gelir
+                    presentation: 'transparentModal',
+                    animation: 'fade',
                     headerShown: false,
                   }}
                 />
